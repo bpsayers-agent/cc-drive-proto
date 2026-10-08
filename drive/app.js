@@ -1,5 +1,5 @@
 import { CLIENT_ID, API_KEY, APP_ID, REDIRECT_URI } from '../config.js';
-import * as drive from './drive.js?v=4';
+import * as drive from './drive.js?v=5';
 
 const D = 'https://www.googleapis.com/auth/';
 const SCOPE_SETS = {
@@ -242,15 +242,17 @@ async function openPicker(kind) {
   const b = new P.PickerBuilder()
     .setOAuthToken(state.token).setDeveloperKey(API_KEY).setAppId(APP_ID)
     .enableFeature(P.Feature.SUPPORT_DRIVES);
+  const label = (v, text) => (typeof v.setLabel === 'function' ? v.setLabel(text) : v);
   if (kind === 'folder') {
-    const mine = new P.DocsView(P.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true)
-      .setMimeTypes('application/vnd.google-apps.folder');
-    const shared = new P.DocsView(P.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true)
-      .setMimeTypes('application/vnd.google-apps.folder').setOwnedByMe(false);
-    b.addView(mine).addView(shared).setTitle('Pick the shared folder');
+    const mine = label(new P.DocsView(P.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true)
+      .setMimeTypes('application/vnd.google-apps.folder').setOwnedByMe(true), 'My folders');
+    const shared = label(new P.DocsView(P.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true)
+      .setMimeTypes('application/vnd.google-apps.folder').setOwnedByMe(false), 'Shared with me');
+    b.addView(shared).addView(mine).setTitle('Pick the shared folder');
   } else {
-    const pdfs = new P.DocsView(P.ViewId.DOCS).setMimeTypes('application/pdf').setIncludeFolders(true);
-    b.addView(pdfs).enableFeature(P.Feature.MULTISELECT_ENABLED).setTitle('Pick statement PDF(s)');
+    const mine = label(new P.DocsView(P.ViewId.DOCS).setMimeTypes('application/pdf').setIncludeFolders(true), 'My Drive');
+    const shared = label(new P.DocsView(P.ViewId.DOCS).setMimeTypes('application/pdf').setIncludeFolders(true).setOwnedByMe(false), 'Shared with me');
+    b.addView(mine).addView(shared).enableFeature(P.Feature.MULTISELECT_ENABLED).setTitle('Pick statement PDF(s)');
   }
   b.setCallback((data) => {
     const action = data[P.Response.ACTION];
