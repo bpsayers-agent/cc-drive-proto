@@ -1,2 +1,52 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Drive prototype</title></head>
-<body><h1>Drive prototype</h1><p>Throwaway test pages. <a href="drive/">Drive access test</a> · <a href="phone/">Phone token test</a></p></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Drive prototype</title>
+<style>
+  :root { color-scheme: light dark; --bg: #fff; --fg: #1a1a1a; --muted: #666; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111; --fg: #eee; --muted: #aaa; } }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg); font: 17px/1.5 -apple-system, system-ui, sans-serif; }
+  .muted { color: var(--muted); }
+  #redirect-note { display: none; }
+</style>
+<script type="module">
+  // OAuth redirect handler. The OAuth client has exactly one redirect URI, this
+  // site root. A page that uses the full-page redirect flow sets
+  // state="<route>:<anything>", where <route> is one of ROUTES. This page takes
+  // the #access_token=... or #error=... fragment, stores it for that page under
+  // the key "oauth.handoff" (sessionStorage, plus localStorage in case the
+  // redirect lands in a different browsing context), and replaces itself with
+  // <route>/. The receiving page must delete both copies on read.
+  const ROUTES = ['phone', 'drive'];
+  const fragment = location.hash.slice(1);
+  const params = new URLSearchParams(fragment);
+  if (params.has('access_token') || params.has('error')) {
+    const route = (params.get('state') || '').split(':')[0];
+    if (ROUTES.includes(route)) {
+      const handoff = JSON.stringify({ route, fragment, at: Date.now() });
+      try { sessionStorage.setItem('oauth.handoff', handoff); } catch {}
+      try { localStorage.setItem('oauth.handoff', handoff); } catch {}
+      if (route === 'phone') {
+        const { appendEvent } = await import('./phone/log.js');
+        appendEvent('redirect-landed-at-root', { result: params.has('error') ? `error:${params.get('error')}` : 'token' });
+      }
+      location.replace(`${route}/`);
+    } else {
+      history.replaceState(null, '', location.pathname);
+      document.getElementById('redirect-note').style.display = 'block';
+    }
+  }
+</script>
+</head>
+<body>
+<h1>Drive prototype</h1>
+<p>Throwaway test pages.</p>
+<ul>
+  <li><a href="drive/">Drive access test</a></li>
+  <li><a href="phone/">Phone token test</a></li>
+</ul>
+<p id="redirect-note" class="muted">A Google sign-in result arrived without a recognised destination, so it was discarded. Open one of the pages above and try again.</p>
+</body>
+</html>
