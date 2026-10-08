@@ -1,5 +1,5 @@
 import { CLIENT_ID, API_KEY, APP_ID, REDIRECT_URI } from '../config.js';
-import * as drive from './drive.js';
+import * as drive from './drive.js?v=3';
 
 const D = 'https://www.googleapis.com/auth/';
 const SCOPE_SETS = {
