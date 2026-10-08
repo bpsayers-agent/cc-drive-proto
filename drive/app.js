@@ -1,5 +1,5 @@
 import { CLIENT_ID, API_KEY, APP_ID, REDIRECT_URI } from '../config.js';
-import * as drive from './drive.js?v=3';
+import * as drive from './drive.js?v=4';
 
 const D = 'https://www.googleapis.com/auth/';
 const SCOPE_SETS = {
@@ -118,6 +118,7 @@ function renderAuth() {
   $('#expires').textContent = state.token ? new Date(state.expiresAt).toLocaleTimeString() : '-';
   $('#requested').textContent = set.scopes.join('\n');
   document.querySelectorAll('[data-needs-token]').forEach((b) => { b.disabled = !state.token; });
+  $('#revoke').disabled = false; $('#signIn').disabled = false;
   $('#pickFolder').disabled = !state.token;
   $('#pickPdf').disabled = !state.token;
 }
@@ -445,7 +446,7 @@ function init() {
   $('#pickFolder').onclick = () => openPicker('folder').catch((e) => log('picker error: ' + e.message));
   $('#pickPdf').onclick = () => openPicker('pdf').catch((e) => log('picker error: ' + e.message));
   const guard = (fn) => async () => {
-    document.querySelectorAll('[data-needs-token]').forEach((b) => { b.disabled = true; });
+    document.querySelectorAll('[data-needs-token], #revoke, #signIn').forEach((b) => { b.disabled = true; });
     try { await fn(); } catch (e) { addResult({ criterion: 'error', pass: false, status: 'exception', message: e.message }); }
     renderAuth();
   };
