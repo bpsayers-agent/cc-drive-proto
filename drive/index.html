@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Drive access test</title>
+<style>
+  :root { --bg: #fff; --fg: #1a1a1a; --muted: #666; --line: #ddd; --pass: #e6f4ea; --fail: #fce8e6; --accent: #1a73e8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161616; --fg: #e8e8e8; --muted: #9a9a9a; --line: #333; --pass: #133a20; --fail: #4a1c18; --accent: #8ab4f8; }
+  }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; margin: 0 auto; padding: 16px; max-width: 1000px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; } h2 { font-size: 1.05rem; margin: 22px 0 8px; }
+  .muted { color: var(--muted); font-size: 0.9em; }
+  section { border-top: 1px solid var(--line); }
+  button { font: inherit; padding: 6px 12px; margin: 4px 6px 4px 0; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  #scopes label { display: block; padding: 2px 0; }
+  input[type=text] { font: inherit; padding: 6px; width: min(100%, 520px); box-sizing: border-box; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; }
+  pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; word-break: break-word; }
+  tr.pass { background: var(--pass); } tr.fail { background: var(--fail); }
+  textarea { width: 100%; height: 120px; font: 12px ui-monospace, monospace; background: var(--bg); color: var(--fg); border: 1px solid var(--line); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; } dt { color: var(--muted); } dd { margin: 0; }
+  .table-wrap { overflow-x: auto; }
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<h1>Drive access test</h1>
+<p class="muted">Throwaway prototype. Tests which Google Drive permission lets this page write its own log, read other logs, and read PDFs in a shared folder.
+Device <b id="device"></b> on <span id="origin"></span> · <a id="otherDevice" href="#"></a></p>
+
+<section>
+  <h2>1. Permission (scope) set</h2>
+  <div id="scopes"></div>
+  <label class="muted"><input type="checkbox" id="chooseAccount"> let me choose which Google account</label><br>
+  <label class="muted"><input type="checkbox" id="useRedirect"> sign in by full-page redirect instead of a popup (only on the published page)</label><br>
+  <button id="signIn" class="primary">Sign in with this scope set</button>
+  <button id="revoke">Revoke (sign out of this app)</button>
+  <dl>
+    <dt>Account</dt><dd id="who"></dd>
+    <dt>Requested</dt><dd><pre id="requested"></pre></dd>
+    <dt>Granted</dt><dd><pre id="granted"></pre></dd>
+    <dt>Token expires</dt><dd id="expires"></dd>
+  </dl>
+</section>
+
+<section>
+  <h2>2. Shared folder</h2>
+  <input type="text" id="folderId" placeholder="folder id or Drive folder link">
+  <button id="saveFolder">Use this folder</button><br>
+  <button id="pickFolder">Pick folder with Google Picker</button>
+  <button id="pickPdf">Pick PDF(s) with Google Picker</button>
+  <p class="muted">The folder is remembered in this browser only.</p>
+  <details><summary class="muted">Owner helper: share this folder (needs full drive scope)</summary>
+    <input type="text" id="shareEmail" placeholder="partner's Google address">
+    <button id="share" data-needs-token>Share as editor, no notification email</button>
+    <button id="perms" data-needs-token>Show who has access</button>
+  </details>
+</section>
+
+<section>
+  <h2>3. Tests</h2>
+  <button id="c1" data-needs-token>1. Write own log</button>
+  <button id="c2" data-needs-token>2. Read all logs</button>
+  <button id="c3" data-needs-token>3. List + download a PDF</button>
+  <button id="all" data-needs-token class="primary">Run all</button>
+  <details><summary class="muted">Merged events (last 30)</summary><pre id="merged">(run test 2)</pre></details>
+</section>
+
+<section>
+  <h2>4. Results</h2>
+  <button id="copy" class="primary">Copy results</button>
+  <button id="clear">Clear results</button>
+  <button id="forget">Forget remembered file ids</button>
+  <div class="table-wrap">
+  <table id="results"><thead><tr><th>#</th><th>scope set</th><th>test</th><th>result</th><th>HTTP</th><th>detail</th></tr></thead><tbody></tbody></table>
+  </div>
+  <p class="muted">If "Copy results" does not work, copy from this box:</p>
+  <textarea id="md" readonly></textarea>
+  <details><summary class="muted">Activity log</summary><pre id="log"></pre></details>
+</section>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
