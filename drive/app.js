@@ -311,9 +311,10 @@ async function c1() {
 
   function finish(pass = false, msg) {
     const bad = steps.find((s) => !s.ok);
+    const notes = steps.filter((s) => !s.ok).map((s) => `${s.label} ${s.status}`).join(', ');
     addResult({
-      criterion: 'C1 write own log', pass: !!pass, status: bad ? bad.status : write?.status,
-      message: msg || `${bad?.label} failed: ${bad?.error}`, steps,
+      criterion: 'C1 write own log', pass: !!pass, status: pass ? write.status : bad?.status,
+      message: (msg || `${bad?.label} failed: ${bad?.error}`) + (pass && notes ? ` (non-fatal: ${notes})` : ''), steps,
     });
   }
 }
@@ -422,9 +423,14 @@ async function runAll() { await c1(); await c2(); await c3(); }
 function init() {
   $('#device').textContent = deviceId;
   $('#origin').textContent = location.origin;
-  const other = new URL(location.href); other.searchParams.set('device', deviceId === 'B' ? 'A' : 'B');
-  $('#otherDevice').href = other.href;
-  $('#otherDevice').textContent = `open as device "${other.searchParams.get('device')}"`;
+  $('#switchDevice').onclick = () => {
+    const next = ($('#newDevice').value || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+    if (!next) return;
+    deviceId = next;
+    const u = new URL(location.href); u.searchParams.set('device', next); history.replaceState(null, '', u.href);
+    $('#device').textContent = deviceId;
+    log(`now simulating device ${deviceId} (token kept)`);
+  };
   $('#scopes').innerHTML = Object.entries(SCOPE_SETS).map(([k, v]) =>
     `<label><input type="radio" name="scope" value="${k}" ${k === state.scopeSet ? 'checked' : ''}> ${esc(v.label)}</label>`).join('');
   $('#scopes').addEventListener('change', (e) => {
