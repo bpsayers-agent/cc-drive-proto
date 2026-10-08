@@ -428,6 +428,8 @@ async function copyLog() {
 
 // ---------- wiring ----------
 function wire() {
+  window.addEventListener('error', (e) => log('js-error', { detail: String(e.message || e.error || 'unknown').slice(0, 200) }));
+  window.addEventListener('unhandledrejection', (e) => log('js-error', { detail: String(e.reason && e.reason.message || e.reason).slice(0, 200) }));
   $('signin').addEventListener('click', () => signIn());
   $('renew').addEventListener('click', () => ensureToken('renew-button', true));
   $('check').addEventListener('click', () => ensureToken('check-now', true));

@@ -55,7 +55,7 @@
   #banner { background: var(--accent); color: var(--accent-fg); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   #banner[hidden] { display: none; }
   #banner button { min-height: 38px; background: var(--accent-fg); color: var(--accent); border: 0; }
-  #note-box[hidden] { display: none; }
+  #note-box[hidden], #load-error[hidden] { display: none; }
   #note-box .buttons { grid-template-columns: 1fr; }
   label.choice { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
   label.choice input { margin-top: 4px; width: 20px; height: 20px; }
@@ -74,6 +74,7 @@
 <main>
   <h1>Token test <span id="mode" class="badge">...</span></h1>
 
+  <div id="load-error" class="card warn" hidden>The page did not finish loading. Close it and open it again. If it keeps happening, check you are online.</div>
   <div id="banner" hidden><span></span><button id="banner-cancel" type="button">Cancel</button></div>
 
   <section class="card" aria-label="Status">
@@ -148,5 +149,11 @@
   </section>
 </main>
 <script type="module" src="app.js"></script>
+<script>
+  // If a module failed to load (e.g. a brief GitHub Pages error), say so instead of showing a dead page.
+  setTimeout(function () {
+    if (document.getElementById('mode').textContent === '...') document.getElementById('load-error').hidden = false;
+  }, 8000);
+</script>
 </body>
 </html>
